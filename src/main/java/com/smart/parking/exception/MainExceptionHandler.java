@@ -20,4 +20,10 @@ public class MainExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(new MainException(
                 ex.getMessage(), 404, "PLEASE LOGIN IN"), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(AlreadyExists.class)
+    public ResponseEntity<MainException> userAlreadyExists(AlreadyExists ex) {
+        return new ResponseEntity<>(new MainException(
+                ex.getMessage(), 404, "WRONG VALUE"), HttpStatus.BAD_REQUEST);
+    }
 }

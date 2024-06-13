@@ -6,6 +6,7 @@ import com.smart.parking.dto.parking.ParkingRequest;
 import com.smart.parking.entity.Car;
 import com.smart.parking.entity.Parking;
 import com.smart.parking.entity.User;
+import com.smart.parking.exception.AlreadyExists;
 import com.smart.parking.exception.NotFoundException;
 import com.smart.parking.repository.CarRepository;
 import com.smart.parking.repository.ParkingRepository;
@@ -28,6 +29,7 @@ public class CarServiceImpl implements CarService {
     // TODO need to be deleted
     @Override
     public void save(CarGetRequest request, User user) {
+
         var car = Car.builder()
                 .id(request.getId())
                 .carName(request.getCarName())
@@ -106,30 +108,35 @@ public class CarServiceImpl implements CarService {
 
     @Override
     public void saveCar(CarPostRequest carRequest, User user) {
-        Car car = Car.builder()
-                .carName(carRequest.getCarName())
-                .numberPlate(carRequest.getNumberPlate())
-                .user(user)
-                .isDeleted(false)
-                .build();
-
-        Set<Parking> parkingPlaces = new HashSet<>();
-        Set<Car> cars = new HashSet<>();
-        for (ParkingRequest parkingEntity : carRequest.getParking()) {
-            Parking parkingPlace = Parking.builder()
-                    .parkingName(parkingEntity.getParkingName())
+        Optional<Car> byLicense = repository.findByLicense(carRequest.getNumberPlate(), false);
+        if (byLicense.isEmpty()) {
+            Car car = Car.builder()
+                    .carName(carRequest.getCarName())
+                    .numberPlate(carRequest.getNumberPlate())
                     .user(user)
-                    .parkedCars(cars)
                     .isDeleted(false)
                     .build();
 
-            cars.add(car);
-            parkingPlaces.add(parkingPlace);
-            parkingPlaceRepository.save(parkingPlace);
-        }
+            Set<Parking> parkingPlaces = new HashSet<>();
+            Set<Car> cars = new HashSet<>();
+            for (ParkingRequest parkingEntity : carRequest.getParking()) {
+                Parking parkingPlace = Parking.builder()
+                        .parkingName(parkingEntity.getParkingName())
+                        .user(user)
+                        .parkedCars(cars)
+                        .isDeleted(false)
+                        .build();
 
-        car.setParkingPlaces(parkingPlaces);
-        repository.save(car);
+                cars.add(car);
+                parkingPlaces.add(parkingPlace);
+                parkingPlaceRepository.save(parkingPlace);
+            }
+
+            car.setParkingPlaces(parkingPlaces);
+            repository.save(car);
+        } else {
+            throw new AlreadyExists("CAR ALREADY EXISTS WITH SUCH NUMBER PLATE");
+        }
     }
 
     @Override

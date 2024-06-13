@@ -8,6 +8,7 @@ import com.smart.parking.dto.parking.ParkingPostRequest;
 import com.smart.parking.entity.Car;
 import com.smart.parking.entity.Parking;
 import com.smart.parking.entity.User;
+import com.smart.parking.exception.AlreadyExists;
 import com.smart.parking.exception.NotFoundException;
 import com.smart.parking.repository.CarRepository;
 import com.smart.parking.repository.ParkingRepository;
@@ -32,14 +33,19 @@ public class ParkingServiceImpl implements ParkingService {
         // IF PARKING EXITS
         if (parkingEntity.isPresent()) {
             for (CarParkingPostRequest car : request.getCars()) {
-                Car carEntity = Car.builder()
-                        .carName(car.getCarName())
-                        .numberPlate(car.getNumberPlate())
-                        .user(user)
-                        .isDeleted(false)
-                        .parkingPlaces(new HashSet<>(Collections.singleton(parkingEntity.get())))
-                        .build();
-                cars.add(carRepository.save(carEntity));
+                Optional<Car> byLicense = carRepository.findByLicense(car.getNumberPlate(), false);
+                if (byLicense.isEmpty()) {
+                    Car carEntity = Car.builder()
+                            .carName(car.getCarName())
+                            .numberPlate(car.getNumberPlate())
+                            .user(user)
+                            .isDeleted(false)
+                            .parkingPlaces(new HashSet<>(Collections.singleton(parkingEntity.get())))
+                            .build();
+                    cars.add(carRepository.save(carEntity));
+                } else {
+                    throw new AlreadyExists("CAR WITH SUCH NUMBER PLATE ALREADY EXISTS");
+                }
             }
             Parking parkingPlace = parkingEntity.get();
             parkingPlace.setParkedCars(cars);

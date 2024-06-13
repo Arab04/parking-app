@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/car")
+@RequestMapping("/car")
 @RequiredArgsConstructor
 public class CarController {
 
@@ -24,14 +24,14 @@ public class CarController {
         return service.findByNumberPlate(numberPlate);
     }
 
-    @GetMapping("/all")
+    @GetMapping("/all/system")
     public ResponseEntity<List<Car>> findAllCars() {
         return ResponseEntity.ok(service.findAll());
     }
 
-    @GetMapping("/all/{user_id}")
-    public List<CarGetRequest> userCars(@PathVariable("user_id") Long userId) {
-        return service.userCars(userId);
+    @GetMapping("/user/all")
+    public List<CarGetRequest> userCars(@AuthenticationPrincipal User user) {
+        return service.userCars(user.getId());
     }
 
     @GetMapping("/findBy/{carId}")
@@ -52,7 +52,7 @@ public class CarController {
         return ResponseEntity.accepted().build();
     }
 
-    @PostMapping("/with/parking")
+    @PostMapping("/save")
     public ResponseEntity<?> saveCar(@RequestBody CarPostRequest carRequest, @AuthenticationPrincipal User user) {
         service.saveCar(carRequest, user);
         return ResponseEntity.accepted().build();

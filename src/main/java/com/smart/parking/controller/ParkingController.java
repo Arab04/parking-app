@@ -20,15 +20,15 @@ public class ParkingController {
     private final ParkingService parkingService;
 
 
-    @PostMapping
-    public ResponseEntity<?> save(@RequestBody ParkingPostRequest parkingPostRequest, @AuthenticationPrincipal User user){
+    @PostMapping("/save")
+    public ResponseEntity<?> save(@RequestBody ParkingPostRequest parkingPostRequest, @AuthenticationPrincipal User user) {
         parkingService.save(parkingPostRequest, user);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/all/{userId}")
-    public List<ParkingGetRequest> getParkingById(@PathVariable("userId") Long userId) {
-        return parkingService.getParkingById(userId);
+    @GetMapping("/all")
+    public List<ParkingGetRequest> getParkingById(@AuthenticationPrincipal User user) {
+        return parkingService.getParkingById(user.getId());
     }
 
     @GetMapping("/{parkingId}")
@@ -48,8 +48,8 @@ public class ParkingController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{userId}/{parkingId}")
-    public ParkingBarrierControl barrierController(@PathVariable Long userId, @PathVariable Long parkingId, @RequestBody ParkingBarrierControl parkingBarrierControl) {
-        return parkingService.barrierController(parkingId, userId, parkingBarrierControl);
+    @PutMapping("/controller/{parkingId}")
+    public ParkingBarrierControl barrierController(@AuthenticationPrincipal User user, @PathVariable Long parkingId, @RequestBody ParkingBarrierControl parkingBarrierControl) {
+        return parkingService.barrierController(parkingId, user.getId(), parkingBarrierControl);
     }
 }
